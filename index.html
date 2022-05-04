@@ -1,0 +1,51 @@
+<html>
+<head>
+</head>
+<body>
+<script type="text/javascript">
+let jxlModule;
+
+function decodeImage(data) {
+  let bytes = new Uint8Array(data);
+  let len = bytes.length;
+  let addr = jxlModule._malloc(len);
+  jxlModule.HEAP8.set(bytes, addr);
+  let result = jxlModule._jxlDecompress(addr, len);
+  jxlModule._free(addr);
+  if (!result) {
+    console.log("Decoding failed");
+    return;
+  }
+  len = jxlModule.HEAP32[result >> 2];
+  bytes = new Uint8Array(len);
+  bytes.set(jxlModule.HEAP8.slice(result + 4, result + 4 + len));
+  jxlModule._free(result);
+  data = bytes.buffer;
+  const blob = new File([data], "nevermind.png", {type : 'image/png'});
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(blob);
+  img.onload = function() {
+    URL.revokeObjectURL(this.src);
+  }
+  document.body.appendChild(img);
+}
+
+function onJxlModuleReady() {
+  var req = new Request('cat.jxl');
+  fetch(req).then(function(response) {
+    return response.arrayBuffer();
+  }).then(decodeImage);
+}
+
+function loadJxlModule() {
+  JxlCodecModule().then(m => {
+    jxlModule = m;
+    onJxlModuleReady();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', loadJxlModule);
+</script>
+<script type="text/javascript" src="jxl_emcc.js"></script>
+</body>
+</html>

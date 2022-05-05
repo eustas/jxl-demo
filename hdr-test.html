@@ -1,29 +1,33 @@
 <html>
 <head></head>
 <body>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/O-8iilJN1zA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 <script type="text/javascript">
 function createCanvas() {
   let result = document.createElement('canvas');
   result.width = 1024;
-  result.height = 32;
+  result.height = 16;
   let div = document.createElement('div');
   div.appendChild(result);
   document.body.appendChild(div);
   return result;
 }
 function onDomContentLoaded() {
+  createCanvas();
+
   for (let bits = 1; bits < 8; ++bits) {
     let mul = [(bits & 1) * 1.0, ((bits >> 1) & 1) * 1.0, ((bits >> 2) & 1) * 1.0, 0.0];
     let add = [0.0, 0.0, 0.0, 1.0];
 
     let ref = createCanvas();
     let ctxRef = ref.getContext("2d", {colorSpace: "srgb-linear", pixelFormat: "float16"});
-    let pixelsRef = ctxRef.getImageData(0, 0, 1024, 32, {colorSpace: "srgb-linear", storageFormat: "float32"});
+    let pixelsRef = ctxRef.getImageData(0, 0, 1024, 16, {colorSpace: "srgb-linear", storageFormat: "float32"});
     let dataRef = pixelsRef.data;
 
     let lin = createCanvas();
     let ctxLin = lin.getContext("2d", {colorSpace: "srgb-linear", pixelFormat: "float16"});
-    let pixelsLin = ctxLin.getImageData(0, 0, 1024, 32, {colorSpace: "srgb-linear", storageFormat: "float32"});
+    let pixelsLin = ctxLin.getImageData(0, 0, 1024, 16, {colorSpace: "srgb-linear", storageFormat: "float32"});
     let dataLin = pixelsLin.data;
 
     createCanvas();

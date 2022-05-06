@@ -1,49 +1,80 @@
 <html>
 <head></head>
 <body>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/O-8iilJN1zA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="32" height="32" src="https://www.youtube.com/embed/O-8iilJN1zA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 <script type="text/javascript">
-function createCanvas() {
-  let result = document.createElement('canvas');
-  result.width = 1024;
-  result.height = 16;
-  let div = document.createElement('div');
-  div.appendChild(result);
-  document.body.appendChild(div);
-  return result;
-}
-function onDomContentLoaded() {
-  createCanvas();
+function draw(canvas, colorSpace) {
+  let allCoeffs = [
+    [[1, 0], [0, 1], [0, 0]],  // R -> Y
+    [[1, -1], [1, 0], [0, 0]], // Y -> G
+    [[0, 0], [1, 0], [0, 1]],  // G -> C
+    [[0, 0], [1, -1], [1, 0]], // C -> B
+    [[0, 1], [0, 0], [1, 0]],  // B -> M
+    [[1, 0], [0, 0], [1, -1]], // M -> R
+    [[0, 1], [0, 1], [0, 1]],  // Black -> White
+  ];
 
-  for (let bits = 1; bits < 8; ++bits) {
-    let mul = [(bits & 1) * 1.0, ((bits >> 1) & 1) * 1.0, ((bits >> 2) & 1) * 1.0, 0.0];
-    let add = [0.0, 0.0, 0.0, 1.0];
+  let band = 128;
+  let stripe = 256;
+  let W = 7 * band;
+  let H = 3 * (stripe + 1) + 1;
 
-    let ref = createCanvas();
-    let ctxRef = ref.getContext("2d", {colorSpace: "srgb-linear", pixelFormat: "float16"});
-    let pixelsRef = ctxRef.getImageData(0, 0, 1024, 16, {colorSpace: "srgb-linear", storageFormat: "float32"});
-    let dataRef = pixelsRef.data;
+  canvas.width = W;
+  canvas.height = H;
+  let ctx = canvas.getContext("2d", {colorSpace: colorSpace, pixelFormat: "float16"});
+  let pixels = ctx.getImageData(0, 0, W, H, {colorSpace: colorSpace, storageFormat: "float32"});
+  let data = pixels.data;
 
-    let lin = createCanvas();
-    let ctxLin = lin.getContext("2d", {colorSpace: "srgb-linear", pixelFormat: "float16"});
-    let pixelsLin = ctxLin.getImageData(0, 0, 1024, 16, {colorSpace: "srgb-linear", storageFormat: "float32"});
-    let dataLin = pixelsLin.data;
-
-    createCanvas();
-
-    for (let y = 0; y < 32; ++y) {
-      for (let x = 0; x < 1024; ++x) {
-        let offset = (y * 1024 + x) * 4;
-        let v = x / 96.0;
-        for (let c = 0; c < 4; ++c) {
-          dataRef[offset + c] = mul[c] + add[c];
-          dataLin[offset + c] = v * mul[c] + add[c];
-        }
+  for (let y = 0; y < H; ++y) {
+    for (let x = 0; x < W; ++x) {
+      let offset = (y * W + x) * 4;
+      let k = (x / band) | 0;
+      let v = (x - k * band) / band;
+      let sk = (y / (stripe + 1)) | 0;
+      let sv = (y - sk * (stripe + 1)) - 1;
+      let m = sv / stripe;
+      if (sk == 1) {
+        m = 3 * m + 1;
+      } else if (sk == 2) {
+        m = 12 * m + 4;
       }
+      if ((y % (stripe + 1)) == 0) {
+        m = 0;
+      }
+      let coeffs = allCoeffs[k];
+      for (let c = 0; c < 3; ++c) {
+        data[offset + c] = m * (coeffs[c][0] + v * coeffs[c][1]);
+      }
+      data[offset + 3] = 1.0;
     }
-    ctxRef.putImageData(pixelsRef, 0, 0);
-    ctxLin.putImageData(pixelsLin, 0, 0);
+  }
+  ctx.putImageData(pixels, 0, 0);
+}
+
+function addMessage(text, color) {
+  let message = document.createElement('p');
+  message.style = 'color: ' + color+';';
+  message.textContent = text;
+  document.body.append(message);
+}
+
+function onDomContentLoaded() {
+  let params = (new URL(document.location)).searchParams;
+  let colorSpace = params.get('colorSpace') || 'srgb';
+
+  addMessage('Using colorSpace = "'+ colorSpace +'"', 'black');
+
+  let canvas = document.createElement('canvas');
+
+  try {
+    draw(canvas, colorSpace);
+    let div = document.createElement('div');
+    div.appendChild(canvas);
+    document.body.appendChild(div);
+  } catch (ex) {
+    addMessage(ex, 'red');
+    addMessage('Are Blink experiments enabled? about://flags/#enable-experimental-web-platform-features', 'blue');
   }
 }
 

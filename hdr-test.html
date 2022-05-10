@@ -4,7 +4,7 @@
 <iframe width="32" height="32" src="https://www.youtube.com/embed/O-8iilJN1zA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 <script type="text/javascript">
-function draw(canvas, colorSpace) {
+let draw = (canvas, colorSpace) => {
   let allCoeffs = [
     [[1, 0], [0, 1], [0, 0]],  // R -> Y
     [[1, -1], [1, 0], [0, 0]], // Y -> G
@@ -52,14 +52,14 @@ function draw(canvas, colorSpace) {
   ctx.putImageData(pixels, 0, 0);
 }
 
-function addMessage(text, color) {
+let addMessage = (text, color) => {
   let message = document.createElement('p');
   message.style = 'color: ' + color+';';
   message.textContent = text;
   document.body.append(message);
 }
 
-function onDomContentLoaded() {
+let onDomContentLoaded = () => {
   let params = (new URL(document.location)).searchParams;
   let colorSpace = params.get('colorSpace') || 'srgb';
 

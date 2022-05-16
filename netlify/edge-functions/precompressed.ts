@@ -8,6 +8,6 @@ export default async (request: Request, context: Context) => {
   context.log("URL: " + request.url + ", acceptEncodingHeader: " + acceptEncodingHeader + ", supportsBr: " + supportsBr);
   if (supportsBr) {
     // ignores search query
-    context.rewrite(request.url + '.br');
+    return context.rewrite(request.url + '.br');
   }
 };

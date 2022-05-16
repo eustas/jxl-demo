@@ -1,5 +1,5 @@
 [[edge_functions]]
-path = "/compressed"
+path = "/compressed/*"
 function = "precompressed"
 
 [[headers]]

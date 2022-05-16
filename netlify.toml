@@ -1,8 +1,3 @@
 [[edge_functions]]
 path = "/compressed/*"
 function = "precompressed"
-
-[[headers]]
-  for = "/compressed/*.br"
-  [headers.values]
-    Content-Encoding = "br"

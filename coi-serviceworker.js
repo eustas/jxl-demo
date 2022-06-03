@@ -26,6 +26,7 @@ if (typeof window === 'undefined') {
             for (let i = 0; i < workerData.length; ++i) workerBody[i] = workerData.charCodeAt(i);
             const workerHeaders = new Headers();
             workerHeaders.set("Content-Encoding", "br");
+            workerHeaders.set("Content-Type", "application/javascript");
             // TODO: refactor
             workerHeaders.set("Cross-Origin-Embedder-Policy", "require-corp");
             workerHeaders.set("Cross-Origin-Opener-Policy", "same-origin");

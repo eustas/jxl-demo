@@ -2,65 +2,91 @@
 <head>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script src="coi-serviceworker.js"></script>
+  <style>
+#log p {
+  margin: 0;
+}
+  </style>
 </head>
 <body>
-<!--iframe width="32" height="32" src="https://www.youtube.com/embed/O-8iilJN1zA"
-   title="YouTube video player" frameborder="0"
-   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-   allowfullscreen></iframe-->
-
+<div id="log" style="padding:2px; border: solid 1px #000; background-color: #CCC; margin:2px; height: 4em; font-family: monospace; overflow-y: auto;"></div>
 <script type="text/javascript">
 let jxlModule;
 
 let addMessage = (text, color) => {
+  let log = document.getElementById('log');
   let message = document.createElement('p');
   message.style = 'color: ' + color+';';
   message.textContent = text;
-  document.body.append(message);
+  log.append(message);
+  log.scrollTop = log.scrollHeight;
 }
 
-let decodeImage = (data) => {
+let decodeImage = (jxlBytes) => {
+  let params = (new URL(document.location)).searchParams;
+  let colorSpace = params.get('colorSpace') || 'srgb';
+  let wantSdr = params.get('wantSdr') == 'true';
+  let displayNits = parseInt(params.get('displayNits') || '0');
+
+  addMessage('Probing HDR features', 'black');
+  try {
+    let tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = 1;
+    tmpCanvas.height = 1;
+    tmpCanvas.getContext('2d', {colorSpace: 'rec2100-pq', pixelFormat: 'float16'});
+    addMessage('HDR canvas supported', 'green');
+  } catch (ex) {
+    addMessage(ex, 'red');
+    addMessage('Are Blink experiments enabled? about://flags/#enable-experimental-web-platform-features', 'blue');
+    colorSpace = 'srgb-linear';
+    displayNits = displayNits || 100;
+    wantSdr = true;
+  }
+
+  addMessage('Color-space: "'+ colorSpace +'", tone-map to SDR: ' + wantSdr + ', displayNits: ' + (displayNits || 'n/a'), 'black');
+
   let t0 = Date.now();
-  let bytes = new Uint8Array(data);
+  let bytes = new Uint8Array(jxlBytes);
   let len = bytes.length;
   let addr = jxlModule._malloc(len);
   jxlModule.HEAP8.set(bytes, addr);
-  let result = jxlModule._jxlDecompress(addr, len);
+  let result = jxlModule._jxlDecompress(addr, len, wantSdr, displayNits);
   jxlModule._free(addr);
   if (result < 16) {
-    addMessage("Decoding failed (" + result + ")", "red");
+    addMessage('Decoding failed (' + result + ')', 'red');
     return;
   }
   let t1 = Date.now();
-  addMessage("Decoded in " + (t1 - t0) + "ms", "blue");
+  addMessage('Decoded in ' + (t1 - t0) + 'ms', 'blue');
 
   let w = jxlModule.HEAP32[result >> 2];
   let h = jxlModule.HEAP32[(result + 4) >> 2];
-  //let iccSize = jxlModule.HEAP32[(result + 8) >> 2];
-
-  let params = (new URL(document.location)).searchParams;
-  let colorSpace = params.get('colorSpace') || 'srgb-linear';
-
-  addMessage('Using colorSpace = "'+ colorSpace +'"', 'black');
-  //addMessage('ICC size = '+ iccSize, 'black');
 
   let canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
 
-  try {
-    let ctx = canvas.getContext("2d", {colorSpace: colorSpace, pixelFormat: "float16"});
-    let pixels = ctx.getImageData(0, 0, w, h, {colorSpace: colorSpace, storageFormat: "float32"});
-    let data = pixels.data;
-    let src = new Float32Array(jxlModule.HEAP8.buffer);
-    let start = (result + 8) >> 2;
-    let end = start + w * h * 4;
-    data.set(src.slice(start, end));
-    ctx.putImageData(pixels, 0, 0);
-  } catch (ex) {
-    addMessage(ex, 'red');
-    addMessage('Are Blink experiments enabled? about://flags/#enable-experimental-web-platform-features', 'blue');
+  let ctxOptions = {colorSpace: colorSpace, pixelFormat: 'float16'};
+  let pixelOptions = {colorSpace: colorSpace, storageFormat: 'float32'};
+  if (wantSdr) {
+    ctxOptions = null;
+    pixelOptions = null;
   }
+
+  let ctx = canvas.getContext('2d', ctxOptions);
+  let pixels = ctx.getImageData(0, 0, w, h, pixelOptions);
+  let data = pixels.data;
+  let src = null;
+  let start = result + 8;
+  if (wantSdr) {
+    src = new Uint8Array(jxlModule.HEAP8.buffer);
+  } else {
+    src = new Float32Array(jxlModule.HEAP8.buffer);
+    start = start >> 2;
+  }
+  let end = start + w * h * 4;
+  data.set(src.slice(start, end));
+  ctx.putImageData(pixels, 0, 0);
 
   document.body.appendChild(canvas);
 
@@ -87,7 +113,7 @@ let onDomContentLoaded = () => {
   try {
     new SharedArrayBuffer();
   } catch (ex) {
-    addMessage("Installing Service Worker, please wait...", "orange");
+    addMessage('Installing Service Worker, please wait...', 'orange');
     return;
   }
   JxlCodecModule().then(onLoadJxlModule);

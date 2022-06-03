@@ -20,6 +20,9 @@ if (typeof window === 'undefined') {
         if (event.request.cache === "only-if-cached" && event.request.mode !== "same-origin") {
             return;
         }
+        if (event.request.destination !== "document") {
+            return;
+        }
 
         event.respondWith(
             fetch(event.request)

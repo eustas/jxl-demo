@@ -30,11 +30,12 @@ if (typeof window === 'undefined') {
             workerHeaders.set("Cross-Origin-Embedder-Policy", "require-corp");
             workerHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
 
-            return new Response(workerBody, {
+            event.respondWith(new Response(workerBody, {
                 status: 200,
                 statusText: "OK",
                 headers: workerHeaders,
-            });
+            }));
+            return;
         }
 
         event.respondWith(

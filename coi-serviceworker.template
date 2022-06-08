@@ -26,7 +26,7 @@ if (typeof window === 'undefined') {
       return;
     }
     const url = event.request.url;
-    for (const [key, value] of Object.entries(object)) {
+    for (const [key, value] of Object.entries(EMBEDDED)) {
       if (url.endsWith(key)) {
         const workerHeaders = new Headers();
         workerHeaders.set('Content-Type', 'application/javascript');

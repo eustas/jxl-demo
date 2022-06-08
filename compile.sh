@@ -1,6 +1,12 @@
 #!/bin/sh
-jxl_emcc_js=$(uglifyjs ./jxl_emcc.js -m -c | sed -z "s/\n/ /g;s/'/\\\'/g")
-jxl_emcc_worker_js=$(uglifyjs ./jxl_emcc.worker.js -m -c | sed -z "s/\n/ /g;s/'/\\\'/g")
+
+jxl_emcc_js=$(uglifyjs ./jxl_emcc.js -m -c)
+jxl_emcc_js=${jxl_emcc_js//"\\"/"\\\\"}
+jxl_emcc_js=${jxl_emcc_js//"'"/"\\'"}
+
+jxl_emcc_worker_js=$(uglifyjs ./jxl_emcc.worker.js -m -c)
+jxl_emcc_worker_js=${jxl_emcc_worker_js//"\\"/"\\\\"}
+jxl_emcc_worker_js=${jxl_emcc_worker_js//"'"/"\\'"}
 
 coi_serviceworker_js=$(cat ./coi-serviceworker.template)
 coi_serviceworker_js=${coi_serviceworker_js//'$jxl_emcc.js$'/$jxl_emcc_js}

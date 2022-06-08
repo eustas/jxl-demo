@@ -42,7 +42,7 @@ if (typeof window === 'undefined') {
         return;
       }
     }
-    if (event.request.destination === 'document') {
+    if (event.request.destination !== 'document') {
       return;
     }
 

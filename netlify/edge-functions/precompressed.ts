@@ -21,8 +21,14 @@ export default async (request: Request, context: Context) => {
     }
     if (response.status != 200) return response;
     let data = await response.arrayBuffer();
-    var fixedHeaders = new Headers(response.headers);
-    fixedHeaders.set('Content-Type', 'application/' + (url.endsWith('.js') ? 'javascript' : 'wasm'));
+    let fixedHeaders = new Headers(response.headers);
+    let contentEncoding = 'text/html; charset=UTF-8';
+    if (url.endsWith('.js')) {
+      contentEncoding = 'application/javascript';
+    } else if (url.endsWith('.wasm')) {
+      contentEncoding = 'application/wasm';
+    }
+    fixedHeaders.set('Content-Type', contentEncoding);
     fixedHeaders.set('Content-Encoding', 'br');
     return new Response(data, {headers: fixedHeaders});
   }

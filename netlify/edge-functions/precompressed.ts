@@ -1,6 +1,7 @@
 import type { Context } from "netlify:edge";
 
 export default async (request: Request, context: Context) => {
+  let t0 = Date.now();
   let url = request.url;
   let acceptEncodingHeader = request.headers.get('Accept-Encoding') || '';
   // ignores quality
@@ -11,6 +12,7 @@ export default async (request: Request, context: Context) => {
   if (supportsBr) {
     // ignores search query
     let response = await context.rewrite(url + '.br');
+    let t1 = Date.now();
     if (response.status == 404) {
       return;
     }
@@ -30,6 +32,8 @@ export default async (request: Request, context: Context) => {
     }
     fixedHeaders.set('Content-Type', contentEncoding);
     fixedHeaders.set('Content-Encoding', 'br');
+    let t2 = Date.now();
+    console.log("Timing: " + (t1 - t0) + " " + (t2 - t1));
     return new Response(data, {headers: fixedHeaders});
   }
 };

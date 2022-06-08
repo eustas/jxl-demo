@@ -1,7 +1,7 @@
 <html>
 <head>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <script src="compressed/coi-serviceworker.js"></script>
+  <script src="coi-serviceworker.js"></script>
   <style>
 #log p {
   margin: 0;
@@ -16,7 +16,7 @@ let jxlModule;
 let addMessage = (text, color) => {
   let log = document.getElementById('log');
   let message = document.createElement('p');
-  message.style = 'color: ' + color+';';
+  message.style = 'color: ' + color + ';';
   message.textContent = text;
   log.append(message);
   log.scrollTop = log.scrollHeight;

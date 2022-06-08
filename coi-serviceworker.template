@@ -28,16 +28,16 @@ if (typeof window === 'undefined') {
     const url = event.request.url;
     for (const [key, value] of Object.entries(EMBEDDED)) {
       if (url.endsWith(key)) {
-        const workerHeaders = new Headers();
-        workerHeaders.set('Content-Type', 'application/javascript');
+        const headers = new Headers();
+        headers.set('Content-Type', 'application/javascript');
         // TODO: refactor
-        workerHeaders.set('Cross-Origin-Embedder-Policy', 'require-corp');
-        workerHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
+        headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+        headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 
-        event.respondWith(new Response(workerBody, {
+        event.respondWith(new Response(value, {
           status: 200,
           statusText: 'OK',
-          headers: value,
+          headers: headers,
         }));
         return;
       }

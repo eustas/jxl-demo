@@ -11,6 +11,9 @@ export default async (request: Request, context: Context) => {
   if (supportsBr) {
     // ignores search query
     let response = await context.rewrite(url + '.br');
+    if (response.status == 404) {
+      return;
+    }
     let responseEtag = response.headers.get('ETag') || '';
     context.log("Response etag: " + responseEtag);
     if (etag.length >= 4 && responseEtag === etag) {

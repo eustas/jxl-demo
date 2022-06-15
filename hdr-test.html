@@ -18,12 +18,12 @@ let draw = (canvas, colorSpace) => {
   let band = 128;
   let stripe = 256;
   let W = 7 * band;
-  let H = 3 * (stripe + 1) + 1;
+  let H = stripe;
 
   canvas.width = W;
   canvas.height = H;
   let ctx = canvas.getContext("2d", {colorSpace: colorSpace, pixelFormat: "float16"});
-  let pixels = ctx.getImageData(0, 0, W, H, {colorSpace: colorSpace, storageFormat: "float32"});
+  let pixels = ctx.getImageData(0, 0, W, H, {colorSpace: colorSpace, storageFormat: "uint16"});
   let data = pixels.data;
 
   for (let y = 0; y < H; ++y) {
@@ -44,9 +44,9 @@ let draw = (canvas, colorSpace) => {
       }
       let coeffs = allCoeffs[k];
       for (let c = 0; c < 3; ++c) {
-        data[offset + c] = m * (coeffs[c][0] + v * coeffs[c][1]);
+        data[offset + c] = 65535 * m * (coeffs[c][0] + v * coeffs[c][1]);
       }
-      data[offset + 3] = 1.0;
+      data[offset + 3] = 65535;
     }
   }
   ctx.putImageData(pixels, 0, 0);

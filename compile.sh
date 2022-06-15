@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 jxl_emcc_js=$(uglifyjs ./jxl_emcc.js -m -c)
 jxl_emcc_js=${jxl_emcc_js//"\\"/"\\\\"}

@@ -2,7 +2,7 @@ import type { Context } from "netlify:edge";
 
 export default async (request: Request, context: Context) => {
   let t0 = Date.now();
-  let url = request.url;
+  let url = request.url.split('?')[0];
   let acceptEncodingHeader = request.headers.get('Accept-Encoding') || '';
   // ignores quality
   let supportedEncodings = acceptEncodingHeader.split(',').map(v => v.trimStart());

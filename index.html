@@ -62,29 +62,36 @@ let onDomContentLoaded = () => {
 };
 
 let processChunk = (img, chunkLen) => {
-  let t0 = Date.now();
-  let result = jxlModule._jxlProcessInput(img.decoder, img.buffer, chunkLen);
-  let t1 = Date.now();
-  let tProcessing = t1 - t0;
-  // addMessage('Processed chunk in ' + tProcessing + 'ms', 'blue');
-  img.totalProcessing += tProcessing;
-  // addMessage('Process result: ' + result, 'green');
-  let wantFlush = false;
-  let copyPixels = false;
-  if (result === 2) {
-    // addMessage('Needs more input', 'gray');
-  } else if (result === 0) {
-    addMessage('Image ready', 'gray');
-    copyPixels = true;
-  } else if (result === 1) {
-    addMessage('DC ready', 'gray');
-    wantFlush = true;
-    copyPixels = true;
-  } else {
-    addMessage('Processing error', 'red');
-    img.broken = true;
-    return;
-  }
+  let wantFlush;
+  let copyPixels;
+  do {
+    let t0 = Date.now();
+    let result = jxlModule._jxlProcessInput(img.decoder, img.buffer, chunkLen);
+    let t1 = Date.now();
+    let tProcessing = t1 - t0;
+    // addMessage('Processed chunk in ' + tProcessing + 'ms', 'blue');
+    img.totalProcessing += tProcessing;
+    // addMessage('Process result: ' + result, 'green');
+    wantFlush = false;
+    copyPixels = false;
+    if (result === 2) {
+      addMessage('Needs more input', 'gray');
+    } else if (result === 0) {
+      addMessage('Image ready', 'gray');
+      copyPixels = true;
+    } else if (result === 1) {
+      addMessage('DC ready', 'gray');
+      wantFlush = true;
+      copyPixels = true;
+      chunkLen = 0;
+      continue;
+    } else {
+      addMessage('Processing error', 'red');
+      img.broken = true;
+      return;
+    }
+    break;
+  } while (true);
 
   if (wantFlush) {
     let t2 = Date.now();
@@ -129,6 +136,8 @@ let processChunk = (img, chunkLen) => {
   img.canvasCtx.putImageData(img.pixels, 0, 0);
 };
 
+const BUF_LEN = 150 * 1024;
+
 let onChunk = (img, chunk) => {
   if (chunk.done) {
     addMessage('Read finished | total processing: ' + img.totalProcessing + 'ms | total flushing ' + img.totalFlushing + 'ms', 'black');
@@ -146,7 +155,7 @@ let onChunk = (img, chunk) => {
       return;
     }
     img.decoder = decoder;
-    img.buffer = jxlModule._malloc(65536);
+    img.buffer = jxlModule._malloc(BUF_LEN);
   }
 
   // addMessage('Received chunk: ' + chunk.value.length, 'gray');
@@ -154,7 +163,7 @@ let onChunk = (img, chunk) => {
   let offset = 0;
   while (offset < chunk.value.length) {
     let delta = chunk.value.length - offset;
-    if (delta > 65536) delta = 65536;
+    if (delta > BUF_LEN) delta = BUF_LEN;
     jxlModule.HEAP8.set(chunk.value.slice(offset, offset + delta), img.buffer);
     offset += delta;
     processChunk(img, delta);

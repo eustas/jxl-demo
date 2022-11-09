@@ -63,9 +63,12 @@ let onDomContentLoaded = () => {
   JxlCodecModule().then(onLoadJxlModule);
 };
 
-let processChunk = (img, chunkLen) => {
-  let wantFlush;
-  let copyPixels;
+let processInput = (img, chunkLen) => {
+  let response = {
+    wantFlush: false,
+    copyPixels: false,
+    error: false,
+  }
   do {
     let t0 = Date.now();
     let result = jxlModule._jxlProcessInput(img.decoder, img.buffer, chunkLen);
@@ -74,28 +77,38 @@ let processChunk = (img, chunkLen) => {
     // addMessage('Processed chunk in ' + tProcessing + 'ms', 'blue');
     img.totalProcessing += tProcessing;
     // addMessage('Process result: ' + result, 'green');
-    wantFlush = false;
-    copyPixels = false;
     if (result === 2) {
       addMessage('Needs more input', 'gray');
     } else if (result === 0) {
-      addMessage('Image ready', 'gray');
-      copyPixels = true;
+      // addMessage('Image ready', 'gray');
+      response.wantFlush = false;
+      response.copyPixels = true;
     } else if (result === 1) {
-      addMessage('DC ready', 'gray');
-      wantFlush = true;
-      copyPixels = true;
-      chunkLen = 0;
-      continue;
+      if (img.wantProgressive) {
+        addMessage('DC ready', 'gray');
+        response.wantFlush = true;
+        response.copyPixels = true;
+      } else {
+        // addMessage('Skipping DC flush', 'gray');
+        chunkLen = 0;
+        continue;
+      }
     } else {
       addMessage('Processing error', 'red');
       img.broken = true;
-      return;
+      response.error = true;
+      break;
     }
     break;
   } while (true);
+  return response;
+}
 
-  if (wantFlush) {
+let processChunk = (img, chunkLen) => {
+  let result = processInput(img, chunkLen);
+  if (result.error) return;
+
+  if (result.wantFlush) {
     let t2 = Date.now();
     let flushResult = jxlModule._jxlFlush(img.decoder);
     let t3 = Date.now();
@@ -104,7 +117,7 @@ let processChunk = (img, chunkLen) => {
     img.totalFlushing += tFlushing;
   }
 
-  if (!copyPixels) return;
+  if (!result.copyPixels) return;
 
   let w = jxlModule.HEAP32[img.decoder >> 2];
   let h = jxlModule.HEAP32[(img.decoder + 4) >> 2];
@@ -140,10 +153,13 @@ let processChunk = (img, chunkLen) => {
 
 const BUF_LEN = 150 * 1024;
 
+let fullImage = new Uint8Array(0);
+
 let onChunk = (img, chunk) => {
   if (chunk.done) {
     addMessage('Read finished | total processing: ' + img.totalProcessing + 'ms | total flushing ' + img.totalFlushing + 'ms', 'black');
     cleanup(img);
+    img.onComplete(img);
     return;
   }
   if (img.broken) return;
@@ -161,6 +177,10 @@ let onChunk = (img, chunk) => {
   }
 
   // addMessage('Received chunk: ' + chunk.value.length, 'gray');
+  let newFullImage = new Uint8Array(fullImage.length + chunk.value.length);
+  newFullImage.set(fullImage);
+  newFullImage.set(chunk.value, fullImage.length);
+  fullImage = newFullImage;
 
   let offset = 0;
   while (offset < chunk.value.length) {
@@ -211,6 +231,45 @@ let onResponse = (img, response) => {
   img.proceed();
 };
 
+let onComplete = (img) => {
+  let buffer = jxlModule._malloc(fullImage.length);
+  jxlModule.HEAP8.set(fullImage, buffer);
+  img.buffer = buffer;
+
+  for (let i = 0; i < 32; ++i) {
+    img.totalProcessing = 0;
+    img.decoder = jxlModule._jxlCreateInstance(img.wantSdr, img.displayNits);
+    processChunk(img, fullImage.length);
+    jxlModule._jxlDestroyInstance(img.decoder);
+    addMessage('Decoding time: ' + img.totalProcessing + 'ms', 'black');
+  }
+
+  jxlModule._free(buffer);
+};
+
+let makeImg = () => {
+  return {
+    name: '',
+    colorSpace: 'rec2100-pq',
+    wantSdr: false,
+    displayNits: 100,
+    broken: false,
+    decoder: 0,
+    canvas: null,
+    canvasCtx: null,
+    pixels: null,
+    buffer: 0,
+    wantProgressive: false,
+    onlyDecode: false,
+    totalProcessing: 0,
+    totalFlushing: 0,
+    onChunk: () => {},
+    onReadError: () => {},
+    proceed: () => {},
+    onComplete: () => {},
+  };
+}
+
 let onJxlModuleReady = () => {
   let params = (new URL(document.location)).searchParams;
   const images = ['cat.jxl', 'piscine.jxl'];
@@ -229,24 +288,15 @@ let onJxlModuleReady = () => {
 
   addMessage('Color-space: "'+ colorSpace +'", tone-map to SDR: ' + wantSdr + ', displayNits: ' + (displayNits || 'n/a'), 'black');
 
-  let img = {
-    name: imgName,
-    colorSpace: colorSpace,
-    wantSdr: wantSdr,
-    displayNits: displayNits,
-    broken: false,
-    decoder: 0,
-    canvas: null,
-    canvasCtx: null,
-    pixels: null,
-    buffer: 0,
-    totalProcessing: 0,
-    totalFlushing: 0
-  };
-
+  let img = makeImg();
+  img.name = imgName;
+  img.colorSpace = colorSpace;
+  img.wantSdr = wantSdr;
+  img.displayNits = displayNits;
   img.onChunk = onChunk.bind(null, img);
   img.onReadError = onReadError.bind(null, img);
   img.proceed = proceed.bind(null, img);
+  img.onComplete = onComplete.bind(null, img);
 
   fetch(new Request(imgName, {cache: "no-store"})).then(onResponse.bind(null, img));
 };

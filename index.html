@@ -68,9 +68,9 @@ let processInput = (img, chunkLen) => {
     error: false,
   }
   do {
-    let t0 = Date.now();
+    let t0 = performance.now();
     let result = jxlModule._jxlProcessInput(img.decoder, img.buffer, chunkLen);
-    let t1 = Date.now();
+    let t1 = performance.now();
     let tProcessing = t1 - t0;
     // addMessage('Processed chunk in ' + tProcessing + 'ms', 'blue');
     img.totalProcessing += tProcessing;
@@ -107,9 +107,9 @@ let processChunk = (img, chunkLen) => {
   if (result.error) return;
 
   if (result.wantFlush) {
-    let t2 = Date.now();
+    let t2 = performance.now();
     let flushResult = jxlModule._jxlFlush(img.decoder);
-    let t3 = Date.now();
+    let t3 = performance.now();
     let tFlushing = t3 - t2;
     addMessage('Flush result: ' + flushResult, 'gray');
     img.totalFlushing += tFlushing;
@@ -155,7 +155,7 @@ let fullImage = new Uint8Array(0);
 
 let onChunk = (img, chunk) => {
   if (chunk.done) {
-    addMessage('Read finished | total processing: ' + img.totalProcessing + 'ms | total flushing ' + img.totalFlushing + 'ms', 'black');
+    addMessage('Read finished | total processing: ' + img.totalProcessing.toFixed(1) + 'ms | total flushing ' + img.totalFlushing.toFixed(1) + 'ms', 'black');
     cleanup(img);
     img.onComplete(img);
     return;
@@ -230,17 +230,26 @@ let onResponse = (img, response) => {
 };
 
 let onComplete = (img) => {
+  if (!img.runBenchmark) return;
+
   let buffer = jxlModule._malloc(fullImage.length);
   jxlModule.HEAP8.set(fullImage, buffer);
   img.buffer = buffer;
+  let results = [];
 
-  for (let i = 0; i < 32; ++i) {
+  for (let i = 0; i < 33; ++i) {
     img.totalProcessing = 0;
     img.decoder = jxlModule._jxlCreateInstance(img.wantSdr, img.displayNits);
     processChunk(img, fullImage.length);
     jxlModule._jxlDestroyInstance(img.decoder);
-    addMessage('Decoding time: ' + img.totalProcessing + 'ms', 'black');
+    results.push(img.totalProcessing);
+    //addMessage('Decoding time: ' + img.totalProcessing + 'ms', 'black');
   }
+
+  results.sort();
+  addMessage('Min decoding time: ' + results[0].toFixed(3) + 'ms', 'black');
+  addMessage('Median decoding time: ' + results[results.length >> 1].toFixed(3) + 'ms', 'black');
+  addMessage('Max decoding time: ' + results[results.length - 1].toFixed(3) + 'ms', 'black');
 
   jxlModule._free(buffer);
 };
@@ -261,6 +270,7 @@ let makeImg = () => {
     onlyDecode: false,
     totalProcessing: 0,
     totalFlushing: 0,
+    runBenchmark: false,
     onChunk: () => {},
     onReadError: () => {},
     proceed: () => {},
@@ -277,6 +287,7 @@ let onJxlModuleReady = () => {
   let colorSpace = params.get('colorSpace') || 'srgb';
   let wantSdr = params.get('wantSdr') == 'true';
   let displayNits = parseInt(params.get('displayNits') || '0');
+  let runBenchmark = params.get('runBenchmark') == 'true';
 
   if (!hdrCanvas) {
     colorSpace = 'srgb-linear';
@@ -295,6 +306,7 @@ let onJxlModuleReady = () => {
   img.onReadError = onReadError.bind(null, img);
   img.proceed = proceed.bind(null, img);
   img.onComplete = onComplete.bind(null, img);
+  img.runBenchmark = runBenchmark;
 
   fetch(new Request(imgName, {cache: "no-store"})).then(onResponse.bind(null, img));
 };

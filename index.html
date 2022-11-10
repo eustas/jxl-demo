@@ -239,7 +239,7 @@ let onComplete = (img) => {
   img.buffer = buffer;
   let results = [];
 
-  for (let i = 0; i < 33; ++i) {
+  for (let i = 0; i < img.runBenchmark; ++i) {
     img.totalProcessing = 0;
     img.decoder = jxlModule._jxlCreateInstance(img.wantSdr, img.displayNits);
     processChunk(img, fullImage.length);
@@ -272,7 +272,7 @@ let makeImg = () => {
     onlyDecode: false,
     totalProcessing: 0,
     totalFlushing: 0,
-    runBenchmark: false,
+    runBenchmark: 0,
     onChunk: () => {},
     onReadError: () => {},
     proceed: () => {},
@@ -289,7 +289,7 @@ let onJxlModuleReady = () => {
   let colorSpace = params.get('colorSpace') || 'srgb';
   let wantSdr = params.get('wantSdr') == 'true';
   let displayNits = parseInt(params.get('displayNits') || '0');
-  let runBenchmark = params.get('runBenchmark') == 'true';
+  let runBenchmark = parseInt(params.get('runBenchmark') || '0');
 
   if (!hdrCanvas) {
     colorSpace = 'srgb-linear';

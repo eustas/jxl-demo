@@ -45,7 +45,9 @@ let probeHdr = () => {
     let tmpCanvas = document.createElement('canvas');
     tmpCanvas.width = 1;
     tmpCanvas.height = 1;
-    tmpCanvas.getContext('2d', {colorSpace: 'rec2100-pq', pixelFormat: 'float16'});
+    let ctx = tmpCanvas.getContext('2d', {colorSpace: 'rec2100-pq', pixelFormat: 'float16'});
+    // make it fail on firefox...
+    ctx.getContextAttributes();
     addMessage('HDR canvas supported', 'green');
     return true;
   } catch (ex) {

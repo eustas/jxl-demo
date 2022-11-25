@@ -6,3 +6,5 @@
 onmessage = function(event) {
   console.log(event.data);
 }
+
+importScripts('jxl_decoder.js');

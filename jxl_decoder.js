@@ -3,6 +3,8 @@ var JxlCodecModule = (() => {
   var _scriptDir = typeof document !== 'undefined' && document.currentScript ?
       document.currentScript.src :
       undefined;
+  console.log('ConstructA ' + _scriptDir);
+  console.log('ConstructB ' + __filename);
   if (typeof __filename !== 'undefined') _scriptDir = _scriptDir || __filename;
   return (function(JxlCodecModule) {
     JxlCodecModule = JxlCodecModule || {};

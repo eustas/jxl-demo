@@ -31,6 +31,7 @@ var JxlCodecModule = (() => {
     var ENVIRONMENT_IS_PTHREAD = Module['ENVIRONMENT_IS_PTHREAD'] || false;
     var scriptDirectory = '';
     function locateFile(path) {
+      console.log("locateFile " + path);
       if (Module['locateFile']) {
         return Module['locateFile'](path, scriptDirectory)
       }

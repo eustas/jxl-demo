@@ -60,7 +60,7 @@ let probeHdr = () => {
 let onDomContentLoaded = () => {
   if (!probeMutlithreading()) return;
   hdrCanvas = probeHdr();
-  JxlCodecModule().then(onLoadJxlModule);
+  //JxlCodecModule().then(onLoadJxlModule);
 };
 
 let processInput = (img, chunkLen) => {
@@ -316,6 +316,6 @@ let onJxlModuleReady = () => {
 
 document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 </script>
-<script type="text/javascript" src="jxl_decoder.js"></script>
+<!--script type="text/javascript" src="jxl_decoder.js"></script-->
 </body>
 </html>

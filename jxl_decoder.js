@@ -8,7 +8,7 @@ var JxlCodecModule = (() => {
   }
   return (function(JxlCodecModule) {
     JxlCodecModule = JxlCodecModule || {};
-
+    console.log('MODULE');
     var Module = typeof JxlCodecModule != 'undefined' ? JxlCodecModule : {};
     var readyPromiseResolve, readyPromiseReject;
     Module['ready'] = new Promise(function(resolve, reject) {

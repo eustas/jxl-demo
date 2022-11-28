@@ -16,7 +16,7 @@ const processQueue = () => {
   }
 }
 
-const onmessage = function(event) {
+onmessage = function(event) {
   const data = event.data;
   if (data.op === 'decode') {
     workQueue.push(event.data);

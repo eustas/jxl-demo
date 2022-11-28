@@ -14,7 +14,7 @@ const processQueue = () => {
     console.log('CW: decoding: ' + data.id);
     postMessage({id: data.id, result: 'bad'});
   }
-}
+};
 
 onmessage = function(event) {
   const data = event.data;
@@ -24,7 +24,7 @@ onmessage = function(event) {
   } else {
     console.log('CW: unknown op: ' + event.data);
   }
-}
+};
 
 const onLoadJxlModule = (module) => {
   decoder = module;

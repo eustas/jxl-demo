@@ -3,10 +3,8 @@ var JxlCodecModule = (() => {
   var _scriptDir = typeof document !== 'undefined' && document.currentScript ?
       document.currentScript.src :
       undefined;
-  console.log('ConstructA ' + _scriptDir);
   if (typeof __filename !== 'undefined') {
     _scriptDir = _scriptDir || __filename;
-    console.log('ConstructB ' + __filename);
   }
   return (function(JxlCodecModule) {
     JxlCodecModule = JxlCodecModule || {};
@@ -455,6 +453,7 @@ var JxlCodecModule = (() => {
         'wasi_snapshot_preview1': asmLibraryArg
       };
       function receiveInstance(instance, module) {
+        console.log('receiveInstance');
         var exports = instance.exports;
         Module['asm'] = exports;
         registerTLSInit(Module['asm']['_emscripten_tls_init']);
@@ -657,6 +656,7 @@ var JxlCodecModule = (() => {
         PThread.tlsInitFunctions.forEach(f => f())
       },
       loadWasmModuleToWorker: function(worker, onFinishedLoading) {
+        console.log('loadWasmModuleToWorker');
         worker.onmessage = e => {
           var d = e['data'];
           var cmd = d['cmd'];
@@ -735,6 +735,7 @@ var JxlCodecModule = (() => {
         PThread.unusedWorkers.push(new Worker(pthreadMainJs))
       },
       getNewWorker: function() {
+        console.log('getNewWorker');
         if (PThread.unusedWorkers.length == 0) {
           PThread.allocateUnusedWorker();
           PThread.loadWasmModuleToWorker(PThread.unusedWorkers[0])

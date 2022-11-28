@@ -12,5 +12,6 @@ const onLoadJxlModule = (module) => {
 }
 
 importScripts('jxl_decoder.js');
+console.log('before construct');
 JxlCodecModule.mainScriptUrlOrBlob = 'https://jxl-demo.netlify.app/jxl_decoder.js';
 JxlCodecModule().then(onLoadJxlModule);

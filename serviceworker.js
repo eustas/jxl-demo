@@ -43,7 +43,7 @@
   // TODO: cleanup, when client is gone / too old.
   const inflight = [];
 
-  const getUid = () => {
+  const makeUid = () => {
     return Math.random().toString(36).substring(2) +
         Math.random().toString(36).substring(2);
   };
@@ -82,10 +82,11 @@
     const reader = inputStream.getReader(); // {mode: "byob"}
 
     const inflightEntry = {clientId: clientId, uid: makeUid(), timestamp: Date.now(), outputStreamController: null};
+    inflight.push(inflightEntry);
 
     const outputStream = new ReadableStream({
       start: (controller) => {
-        inflightEntry.controller = controller;
+        outputStreamController.controller = controller;
       },
       pull: async (controller) => {
         console.log('pull ' + Date.now() + ' ' + originalResponse.url);

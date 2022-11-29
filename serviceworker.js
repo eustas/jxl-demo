@@ -107,6 +107,10 @@
         console.log(chunk.value.length);
         reader.read().then(onRead);
       }
+      const buffer = new SharedArrayBuffer(chunk.value.length);
+      buffer.set(chunk.value);
+      client.postMessage(
+          {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
       /*console.log('outputStream pull');
       const chunk = await reader.read();
       if (chunk.done) {

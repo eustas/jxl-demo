@@ -90,6 +90,7 @@
       },
       pull: async (controller) => {
         console.log('pull ' + Date.now() + ' ' + originalResponse.url);
+        controller.enqueue(new Uint8Array([0]));
       },
       // cancel: (reason) => { console.log('outputStream cancel'); },
       // type: "bytes",

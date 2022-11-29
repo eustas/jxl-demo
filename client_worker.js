@@ -11,18 +11,19 @@ let workQueue = [];
 const processQueue = () => {
   while (workQueue.length) {
     const data = workQueue.shift();
-    console.log('CW: decoding: ' + data.id);
-    postMessage({id: data.id, result: 'bad'});
+    console.log('CW job: ' + JSON.stringify(data));
+    const response = {id: data.id, result: 'bad'};
+    console.log('CW->Client: ' + JSON.stringify(response));
+    postMessage(response);
   }
 };
 
 onmessage = function(event) {
   const data = event.data;
+  console.log('CW received: ' + JSON.stringify(data));
   if (data.op === 'decode') {
     workQueue.push(event.data);
     processQueue();
-  } else {
-    console.log('CW: unknown op: ' + event.data);
   }
 };
 

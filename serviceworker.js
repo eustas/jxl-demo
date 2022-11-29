@@ -91,9 +91,9 @@
         console.log('outputStream pull');
         const chunk = await reader.read();
         if (chunk.done) {
-          controller.enqueue(chunk.value);
-        } else {
           controller.close();
+        } else {
+          controller.enqueue(chunk.value);
         }
       },
       cancel: (reason) => {

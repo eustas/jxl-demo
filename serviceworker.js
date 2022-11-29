@@ -77,11 +77,9 @@
       return originalResponse;
     }
 
-    let inputStream = await originalResponse.body;
-    // No response body (e.g. cached).
-    if (!inputStream) {
-      return originalResponse;
-    }
+    const inputStream = await originalResponse.body;
+    // if (!inputStream) {return originalResponse;} // No response body (e.g. cached).
+    const reader = inputStream.getReader(); // {mode: "byob"}
 
     // const uid = makeUid();
     // const now = Date.now();
@@ -89,9 +87,14 @@
       start: (controller) => {
         console.log('outputStream start');
       },
-      pull: (controller) => {
+      pull: async (controller) => {
         console.log('outputStream pull');
-        return inputStream.pull();
+        const chunk = await reader.read();
+        if (chunk.done) {
+          controller.enqueue(chunk.value);
+        } else {
+          controller.close();
+        }
       },
       cancel: (reason) => {
         console.log('outputStream cancel');

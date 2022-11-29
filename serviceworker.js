@@ -69,12 +69,19 @@
   };
 
   const wrapImageResponse = async (clientId, originalResponse) => {
+    console.log('Response status: ' + originalResponse.status + ', url: ' + originalResponse.url);
+
     const client = await clients.get(clientId);
     // Client is gone? Not our problem then.
     if (!client) {
       return originalResponse;
     }
+
     let inputStream = await originalResponse.body;
+    // No response body (e.g. cached).
+    if (!inputStream) {
+      return originalResponse;
+    }
 
     // const uid = makeUid();
     // const now = Date.now();

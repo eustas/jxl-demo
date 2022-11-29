@@ -69,7 +69,9 @@
   };
 
   const wrapImageResponse = async (clientId, originalResponse) => {
-    console.log('Response status: ' + originalResponse.status + ', url: ' + originalResponse.url);
+    console.log(
+        'Response status: ' + originalResponse.status +
+        ', url: ' + originalResponse.url);
 
     const client = await clients.get(clientId);
     // Client is gone? Not our problem then.
@@ -78,48 +80,58 @@
     }
 
     const inputStream = await originalResponse.body;
-    // if (!inputStream) {return originalResponse;} // No response body (e.g. cached).
-    const reader = inputStream.getReader(); // {mode: "byob"}
+    // "read" is provided with buffer to fill in; this way we could do
+    // "zero-copy" transfer.
+    const reader = inputStream.getReader({mode: 'byob'});
 
-    const inflightEntry = {clientId: clientId, uid: makeUid(), timestamp: Date.now(), outputStreamController: null};
+    const inflightEntry = {
+      clientId: clientId,
+      uid: makeUid(),
+      timestamp: Date.now(),
+      inputStreamReader: reader,
+      outputStreamController: null
+    };
     inflight.push(inflightEntry);
 
     const outputStream = new ReadableStream({
       start: (controller) => {
         inflightEntry.outputStreamController = controller;
       },
-      pull: async (controller) => {
-        console.log('pull ' + Date.now() + ' ' + originalResponse.url);
-        controller.enqueue(new Uint8Array([0]));
-      },
+      // pull: async (controller) => { },
       // cancel: (reason) => { console.log('outputStream cancel'); },
       // type: "bytes",
       // autoAllocateChunkSize: 65536,
     });
 
-    /*console.log('outputStream pull');
-    const chunk = await reader.read();
-    if (chunk.done) {
-      console.log('done');
-      controller.close();
-    } else {
-      console.log('chunk ' + chunk.value.length);
-      controller.enqueue(chunk.value);
-    }*/
+    const onRead = (chunk) => {
+      console.log(chunk.value);
+      if (!chunk.done) {
+        reader.read(new SharedArrayBuffer(65536)).then(onRead);
+      }
+      /*console.log('outputStream pull');
+      const chunk = await reader.read();
+      if (chunk.done) {
+        console.log('done');
+        controller.close();
+      } else {
+        console.log('chunk ' + chunk.value.length);
+        controller.enqueue(chunk.value);
+      }*/
+    };
+    reader.read(new SharedArrayBuffer(65536)).then(onRead);
 
     let modifiedResponseHeaders = new Headers(originalResponse.headers);
     //  modifiedResponseHeaders.set('Content-Type', 'image/png');
-    return new Response(outputStream, { headers: modifiedResponseHeaders });
-
-    // inflight.push({clientId: clientId, uid: uid, timestamp: now, response: response});
-    //console.log('SW->Client(' + clientId + ') url: ' + request.url);
-    //client.postMessage({op: 'decode', url: request.url});
+    return new Response(outputStream, {headers: modifiedResponseHeaders});
+    // console.log('SW->Client(' + clientId + ') url: ' + request.url);
+    // client.postMessage({op: 'decode', url: request.url});
   };
 
   const wrapImageRequest = async (clientId, request) => {
     let modifiedRequestHeaders = new Headers(request.headers);
     modifiedRequestHeaders.append('Accept', 'image/jxl');
-    let modifiedRequest = new Request(request, {headers: modifiedRequestHeaders});
+    let modifiedRequest =
+        new Request(request, {headers: modifiedRequestHeaders});
     let originalResponse = await fetch(modifiedRequest);
     let contentType = originalResponse.headers.get('Content-Type');
 
@@ -158,7 +170,9 @@
 
   const serviceWorkerMain = () => {
     // ServiceWorker lifecycle.
-    self.addEventListener('install', () => { return self.skipWaiting(); });
+    self.addEventListener('install', () => {
+      return self.skipWaiting();
+    });
     self.addEventListener(
         'activate', (event) => event.waitUntil(self.clients.claim()));
     self.addEventListener('message', (event) => {

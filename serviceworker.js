@@ -116,7 +116,7 @@
     let originalResponse = await fetch(modifiedRequest);
     let contentType = originalResponse.headers.get('Content-Type');
 
-    return wrapImageResponse(clientId, request);
+    return wrapImageResponse(clientId, originalResponse);
 
     // If server does not support JXL resources, then pass.
     if (contentType != 'image/jxl') {

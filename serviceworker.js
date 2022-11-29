@@ -86,7 +86,7 @@
 
     const outputStream = new ReadableStream({
       start: (controller) => {
-        inflightEntry.outputStreamController.controller = controller;
+        inflightEntry.outputStreamController = controller;
       },
       pull: async (controller) => {
         console.log('pull ' + Date.now() + ' ' + originalResponse.url);

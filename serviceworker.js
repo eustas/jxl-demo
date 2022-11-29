@@ -103,8 +103,8 @@
     });
 
     const onRead = (chunk) => {
-      console.log(chunk.value.length);
       if (!chunk.done) {
+        console.log(chunk.value.length);
         reader.read().then(onRead);
       }
       /*console.log('outputStream pull');

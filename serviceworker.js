@@ -39,7 +39,7 @@
     headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   };
 
-  // Inflight object: {clientId, uid, timestamp}
+  // Inflight object: {clientId, uid, timestamp, controller}
   // TODO: cleanup, when client is gone / too old.
   const inflight = [];
 
@@ -81,29 +81,29 @@
     // if (!inputStream) {return originalResponse;} // No response body (e.g. cached).
     const reader = inputStream.getReader(); // {mode: "byob"}
 
-    // const uid = makeUid();
-    // const now = Date.now();
+    const inflightEntry = {clientId: clientId, uid: makeUid(), timestamp: Date.now(), outputStreamController: null};
+
     const outputStream = new ReadableStream({
       start: (controller) => {
-        console.log('outputStream start');
+        inflightEntry.controller = controller;
       },
       pull: async (controller) => {
-        console.log('outputStream pull');
-        const chunk = await reader.read();
-        if (chunk.done) {
-          console.log('done');
-          controller.close();
-        } else {
-          console.log('chunk ' + chunk.value.length);
-          controller.enqueue(chunk.value);
-        }
+        console.log('pull ' + Date.now() + ' ' + originalResponse.url);
       },
-      cancel: (reason) => {
-        console.log('outputStream cancel');
-      },
+      // cancel: (reason) => { console.log('outputStream cancel'); },
       // type: "bytes",
       // autoAllocateChunkSize: 65536,
     });
+
+    /*console.log('outputStream pull');
+    const chunk = await reader.read();
+    if (chunk.done) {
+      console.log('done');
+      controller.close();
+    } else {
+      console.log('chunk ' + chunk.value.length);
+      controller.enqueue(chunk.value);
+    }*/
 
     let modifiedResponseHeaders = new Headers(originalResponse.headers);
     //  modifiedResponseHeaders.set('Content-Type', 'image/png');

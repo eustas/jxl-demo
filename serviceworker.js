@@ -80,9 +80,8 @@
     }
 
     const inputStream = await originalResponse.body;
-    // "read" is provided with buffer to fill in; this way we could do
-    // "zero-copy" transfer.
-    const reader = inputStream.getReader({mode: 'byob'});
+    // Can't use "BYOB" for regular responses.
+    const reader = inputStream.getReader();
 
     const inflightEntry = {
       clientId: clientId,
@@ -104,9 +103,9 @@
     });
 
     const onRead = (chunk) => {
-      console.log(chunk.value);
+      console.log(chunk.value.length);
       if (!chunk.done) {
-        reader.read(new SharedArrayBuffer(65536)).then(onRead);
+        reader.read().then(onRead);
       }
       /*console.log('outputStream pull');
       const chunk = await reader.read();

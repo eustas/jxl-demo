@@ -108,8 +108,10 @@
         // new Uint8Array(buffer).set(chunk.value);
         // For some reason SharedArrayBuffer is not delivered.
         const buffer = chunk.value;
+        console.log('<<< ' + buffer.length);
         client.postMessage(
-            {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
+            {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer}, [buffer.buffer]);
+        console.log('>>> ' + buffer.length);
         reader.read().then(onRead);
       } else {
         client.postMessage(

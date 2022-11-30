@@ -106,7 +106,7 @@
       if (!chunk.done) {
         console.log(chunk.value.length);
         const buffer = new SharedArrayBuffer(chunk.value.length);
-        buffer.set(chunk.value);
+        new Uint8Array(buffer).set(chunk.value);
         client.postMessage(
             {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
         reader.read().then(onRead);
@@ -129,8 +129,6 @@
     let modifiedResponseHeaders = new Headers(originalResponse.headers);
     //  modifiedResponseHeaders.set('Content-Type', 'image/png');
     return new Response(outputStream, {headers: modifiedResponseHeaders});
-    // console.log('SW->Client(' + clientId + ') url: ' + request.url);
-    // client.postMessage({op: 'decode', url: request.url});
   };
 
   const wrapImageRequest = async (clientId, request) => {

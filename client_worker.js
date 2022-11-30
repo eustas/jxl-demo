@@ -11,8 +11,8 @@ let workQueue = [];
 const processQueue = () => {
   while (workQueue.length) {
     const data = workQueue.shift();
-    console.log('CW job: ' + JSON.stringify(data));
-    const response = {id: data.id, result: 'bad'};
+    console.log('CW job: ' + data.uid);
+    const response = {uid: data.uid, result: 'bad'};
     console.log('CW->Client: ' + JSON.stringify(response));
     postMessage(response);
   }
@@ -20,8 +20,8 @@ const processQueue = () => {
 
 onmessage = function(event) {
   const data = event.data;
-  console.log('CW received: ' + JSON.stringify(data));
-  if (data.op === 'decode') {
+  console.log('CW received: ' + data.op);
+  if (data.op === 'decodeJxl') {
     workQueue.push(event.data);
     processQueue();
   }

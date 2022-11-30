@@ -104,9 +104,10 @@
 
     const onRead = (chunk) => {
       if (!chunk.done) {
-        console.log(chunk.value.length);
-        const buffer = new SharedArrayBuffer(chunk.value.length);
-        new Uint8Array(buffer).set(chunk.value);
+        // const buffer = new SharedArrayBuffer(chunk.value.length);
+        // new Uint8Array(buffer).set(chunk.value);
+        // For some reason SharedArrayBuffer is not delivered.
+        const buffer = chunk.value;
         client.postMessage(
             {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
         reader.read().then(onRead);

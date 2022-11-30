@@ -194,8 +194,8 @@
       console.log('Ooops, not found: ' + uid);
       return;
     }
-    inflightEntry.controller.enqueue(data.data);
-    inflightEntry.controller.close();
+    inflightEntry.outputStreamController.enqueue(data.data);
+    inflightEntry.outputStreamController.close();
   };
 
   const serviceWorkerMain = () => {

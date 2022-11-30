@@ -201,8 +201,8 @@
   const prepareClient = () => {
     const clientWorker = new Worker('client_worker.js');
     clientWorker.onmessage = (event) => {
-      console.log("Client CW->SW");
-      navigator.serviceWorker.controller.postMessage(event.data);
+      // TODO: investigate, why SharedArrayBuffer does not go through.
+      navigator.serviceWorker.controller.postMessage({uid: event.data.uid, data: new Uint8Array(event.data.data)});
     };
 
     // Forward ServiceWorker requests to "Client" worker.

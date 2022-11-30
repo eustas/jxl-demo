@@ -6,13 +6,26 @@
 let decoder = null;
 
 // Serialize work; plus postpone processing until decoder is ready.
-let workQueue = [];
+let jobs = [];
 
-const processQueue = () => {
-  while (workQueue.length) {
-    const data = workQueue.shift();
-    console.log('CW job: ' + data.uid);
-    const response = {uid: data.uid, result: 'bad'};
+const processJobs = () => {
+  while (true) {
+    let job = null;
+    // Currently we do not do progressive; process only "inputComplete" jobs.
+    for (let i = 0; i < jobs.length; ++i) {
+      if (!jobs[i].inputComplete) {
+        continue;
+      }
+      job = jobs[i];
+      jobs[i] = jobs[jobs.length - 1];
+      jobs.pop();
+      break;
+    }
+    if (!job) {
+      return;
+    }
+    console.log('CW job: ' + job.uid);
+    const response = {uid: job.uid, result: 'bad'};
     console.log('CW->Client: ' + JSON.stringify(response));
     postMessage(response);
   }
@@ -22,8 +35,23 @@ onmessage = function(event) {
   const data = event.data;
   console.log('CW received: ' + data.op);
   if (data.op === 'decodeJxl') {
-    workQueue.push(event.data);
-    processQueue();
+    let job = null;
+    for (let i = 0; i < jobs.length; ++i) {
+      if (jobs[i].uid === data.uid) {
+        job = jobs[i];
+        break;
+      }
+    }
+    if (!job) {
+      job = {uid: data.uid, input: [], inputComplete: false};
+      jobs.push(job);
+    }
+    if (data.data) {
+      job.input.push(data.data);
+    } else {
+      job.inputComplete = true;
+    }
+    processJobs();
   }
 };
 

@@ -182,7 +182,20 @@
 
   const onMessage = (event) => {
     const data = event.data;
-    console.log(data.uid + ' ' + data.data.length);
+    const uid = data.uid;
+    let inflightEntry = null;
+    for (let i = 0; i < inflight.length; ++i) {
+      if (inflight[i].uid === uid) {
+        inflightEntry = inflight[i];
+        break;
+      }
+    }
+    if (!inflightEntry) {
+      console.log('Ooops, not found: ' + uid);
+      return;
+    }
+    inflightEntry.controller.enqueue(data.data);
+    inflightEntry.controller.close();
   };
 
   const serviceWorkerMain = () => {

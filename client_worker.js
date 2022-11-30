@@ -57,7 +57,7 @@ onmessage = function(event) {
 
 const onLoadJxlModule = (module) => {
   decoder = module;
-  processQueue();
+  processJobs();
 }
 
 importScripts('jxl_decoder.js');

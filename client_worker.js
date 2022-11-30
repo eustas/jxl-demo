@@ -36,7 +36,7 @@ const processJobs = () => {
       output.set(input[i], offset);
       offset += input[i].length;
     }
-    const response = {uid: job.uid, data: buffer};
+    const response = {uid: job.uid, data: output};
     postMessage(response, [output.buffer]);
   }
 };

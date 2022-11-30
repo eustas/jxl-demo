@@ -25,8 +25,18 @@ const processJobs = () => {
       return;
     }
     console.log('CW job: ' + job.uid);
-    const response = {uid: job.uid, result: 'bad'};
-    console.log('CW->Client: ' + JSON.stringify(response));
+    const input = job.input;
+    let totalInputLength = 0;
+    for (let i = 0; i < input.length; i++) {
+      totalInputLength += input[i].length;
+    }
+    let output = new Uint8Array(totalInputLength);
+    let offset = 0;
+    for (let i = 0; i < input.length; ++i) {
+      output.set(input[i], offset);
+      offset += input[i].length;
+    }
+    const response = {uid: job.uid, data: output};
     postMessage(response);
   }
 };

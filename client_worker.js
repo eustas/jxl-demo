@@ -30,13 +30,15 @@ const processJobs = () => {
     for (let i = 0; i < input.length; i++) {
       totalInputLength += input[i].length;
     }
-    let output = new Uint8Array(totalInputLength);
+    const buffer = new SharedArrayBuffer(totalInputLength);
+    //let output = new Uint8Array(totalInputLength);
+    let output = new Uint8Array(buffer);
     let offset = 0;
     for (let i = 0; i < input.length; ++i) {
       output.set(input[i], offset);
       offset += input[i].length;
     }
-    const response = {uid: job.uid, data: output};
+    const response = {uid: job.uid, data: buffer};
     postMessage(response);
   }
 };

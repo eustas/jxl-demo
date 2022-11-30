@@ -104,14 +104,11 @@
 
     const onRead = (chunk) => {
       if (!chunk.done) {
-        // const buffer = new SharedArrayBuffer(chunk.value.length);
-        // new Uint8Array(buffer).set(chunk.value);
-        // For some reason SharedArrayBuffer is not delivered.
+        // Transfer (zero-copy) buffer.
         const buffer = chunk.value;
-        console.log('<<< ' + buffer.length);
         client.postMessage(
-            {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer}, [buffer.buffer]);
-        console.log('>>> ' + buffer.length);
+            {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer},
+            [buffer.buffer]);
         reader.read().then(onRead);
       } else {
         client.postMessage(
@@ -212,7 +209,8 @@
 
     // Forward ServiceWorker requests to "Client" worker.
     navigator.serviceWorker.addEventListener('message', (event) => {
-      clientWorker.postMessage(event.data);
+      // Transfer buffer (zero-copy)
+      clientWorker.postMessage(event.data, [event.data.data?.buffer]);
     });
   };
 

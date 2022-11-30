@@ -105,12 +105,15 @@
     const onRead = (chunk) => {
       if (!chunk.done) {
         console.log(chunk.value.length);
+        const buffer = new SharedArrayBuffer(chunk.value.length);
+        buffer.set(chunk.value);
+        client.postMessage(
+            {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
         reader.read().then(onRead);
+      } else {
+        client.postMessage(
+          {op: 'decodeJxl', uid: inflightEntry.uid, data: null});
       }
-      const buffer = new SharedArrayBuffer(chunk.value.length);
-      buffer.set(chunk.value);
-      client.postMessage(
-          {op: 'decodeJxl', uid: inflightEntry.uid, data: buffer});
       /*console.log('outputStream pull');
       const chunk = await reader.read();
       if (chunk.done) {

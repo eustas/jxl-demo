@@ -180,6 +180,11 @@
     }
   };
 
+  const onMessage = (event) => {
+    const data = event.data;
+    console.log(data.uid + ' ' + data.data.length);
+  };
+
   const serviceWorkerMain = () => {
     // ServiceWorker lifecycle.
     self.addEventListener('install', () => {
@@ -187,18 +192,7 @@
     });
     self.addEventListener(
         'activate', (event) => event.waitUntil(self.clients.claim()));
-    self.addEventListener('message', (event) => {
-      console.log('->SW');
-      if (event.data && event.data.type === 'deregister') {
-        self.registration.unregister()
-            .then(() => {
-              return self.clients.matchAll();
-            })
-            .then(clients => {
-              clients.forEach((client) => client.navigate(client.url));
-            });
-      }
-    });
+    self.addEventListener('message', onMessage);
     // Intercept some requests.
     self.addEventListener('fetch', onFetch);
   };

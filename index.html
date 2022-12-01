@@ -174,7 +174,7 @@ let onChunk = (img, chunk) => {
       return;
     }
     img.decoder = decoder;
-    img.buffer = jxlModule._jxlMalloc(BUF_LEN);
+    img.buffer = jxlModule._malloc(BUF_LEN);
   }
 
   // addMessage('Received chunk: ' + chunk.value.length, 'gray');
@@ -209,7 +209,7 @@ let cleanup = (img) => {
     img.decoder = 0;
   }
   if (img.buffer) {
-    jxlModule._jxlFree(img.buffer);
+    jxlModule._free(img.buffer);
     img.buffer = 0;
   }
 };
@@ -235,7 +235,7 @@ let onResponse = (img, response) => {
 let onComplete = (img) => {
   if (!img.runBenchmark) return;
 
-  let buffer = jxlModule._jxlMalloc(fullImage.length);
+  let buffer = jxlModule._malloc(fullImage.length);
   jxlModule.HEAP8.set(fullImage, buffer);
   img.buffer = buffer;
   let results = [];
@@ -254,7 +254,7 @@ let onComplete = (img) => {
   addMessage('Median decoding time: ' + results[results.length >> 1].toFixed(3) + 'ms', 'black');
   addMessage('Max decoding time: ' + results[results.length - 1].toFixed(3) + 'ms', 'black');
 
-  jxlModule._jxlFree(buffer);
+  jxlModule._free(buffer);
 };
 
 let makeImg = () => {

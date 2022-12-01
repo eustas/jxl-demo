@@ -37,7 +37,7 @@ const processJobs = () => {
     }
 
     // TODO: persist to reduce fragmentation?
-    const buffer = decoder._jxlMalloc(totalInputLength);
+    const buffer = decoder._malloc(totalInputLength);
     // TODO: check OOM
     let offset = 0;
     for (let i = 0; i < input.length; ++i) {
@@ -46,7 +46,7 @@ const processJobs = () => {
     }
     // TODO: check result
     const result = decoder._jxlDecompress(buffer, totalInputLength);
-    decoder._jxlFree(buffer);
+    decoder._free(buffer);
     const outputLength = decoder.HEAP32[result >> 2];
     const outputAddr = decoder.HEAP32[(output + 4) >> 2];
     const output = new Uint8Array(outputLength);

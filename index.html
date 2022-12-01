@@ -60,7 +60,7 @@ let probeHdr = () => {
 let onDomContentLoaded = () => {
   if (!probeMutlithreading()) return;
   hdrCanvas = probeHdr();
-  //JxlCodecModule().then(onLoadJxlModule);
+  //JxlDecoderModule().then(onLoadJxlModule);
 };
 
 let processInput = (img, chunkLen) => {

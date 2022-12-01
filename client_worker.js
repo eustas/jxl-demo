@@ -30,12 +30,24 @@ const processJobs = () => {
     for (let i = 0; i < input.length; i++) {
       totalInputLength += input[i].length;
     }
-    const output = new Uint8Array(totalInputLength);
+
+    // TODO: persist to reduce fragmentation?
+    const buffer = decoder._malloc(totalInputLength);
+    // TODO: check OOM
     let offset = 0;
     for (let i = 0; i < input.length; ++i) {
-      output.set(input[i], offset);
+      decoder.HEAP8.set(input[i], buffer + offset);
       offset += input[i].length;
     }
+    // TODO: check result
+    const result = decoder._jxlDecompress(buffer, totalInputLength);
+    decoder._free(buffer);
+    const outputLength = decoder.HEAP32[result >> 2];
+    const outputAddr = decoder.HEAP32[(output + 4) >> 2];
+    const output = new Uint8Array(outputLength);
+    const outputSrc = new Uint8Array(decoder.HEAP8.buffer);
+    output.set(outputSrc.slice(outputAddr, outputAddr + outputLength));
+    decoder._jxlCleanup(result);
     const response = {uid: job.uid, data: output};
     postMessage(response, [output.buffer]);
   }
@@ -72,4 +84,4 @@ const onLoadJxlModule = (module) => {
 
 importScripts('jxl_decoder.js');
 const config = {mainScriptUrlOrBlob: 'https://jxl-demo.netlify.app/jxl_decoder.js'};
-JxlCodecModule(config).then(onLoadJxlModule);
+JxlDecoderModule(config).then(onLoadJxlModule);

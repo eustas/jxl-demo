@@ -13,23 +13,34 @@ export default async (request: Request, context: Context) => {
   let url = request.url.split('?')[0];
   // Pick request headers; fallback to empty string if header is not set.
   let acceptEncodingHeader = request.headers.get('Accept-Encoding') || '';
+  let acceptHeader = request.headers.get('Accept') || '';
   let etag = request.headers.get('If-None-Match') || '';
   // Roughly parse encodings list; this ignores "quality"; no modern browsers
   // use it -> don't care.
+  let splitter = /[,;]/;
   let supportedEncodings =
-      acceptEncodingHeader.split(',').map(v => v.trimStart());
+      acceptEncodingHeader.split(splitter).map(v => v.trimStart());
   let supportsBr = supportedEncodings.includes('br');
+  let supportedMedia = acceptHeader.split(splitter).map(v => v.trimStart());
+  let supportsJxl = supportedMedia.includes('image/jxl');
   // Dump basic request info (we care about).
   context.log(
       'URL: ' + url + '; acceptEncodingHeader: ' + acceptEncodingHeader +
-      '; supportsBr: ' + supportsBr + '; etag: ' + etag);
-  // If browser does not support Brotli - just process request normally.
-  if (!supportsBr) {
+      '; supportsBr: ' + supportsBr + '; supportsJxl: ' + supportsJxl +
+      '; etag: ' + etag);
+
+  // If browser does not support Brotli/Jxl - just process request normally.
+  if (!supportsBr && ! supportsJxl) {
     return;
   }
 
+  // Jxl processing is higher priority, because images are (usually) transferred
+  // with 'identity' content encoding.
+  let isJxlWorkflow = supportsJxl;
+  let suffix = isJxlWorkflow ? '.jxl' : '.br';
+
   // Request pre-compressed resource (with a suffix).
-  let response = await context.rewrite(url + '.br');
+  let response = await context.rewrite(url + suffix);
   // First latency checkpoint (as we synchronously wait for resource fetch).
   let t1 = Date.now();
   // If pre-compressed resource does not exist - pass.
@@ -52,17 +63,22 @@ export default async (request: Request, context: Context) => {
   // Second time consuming operation - wait for resource contents.
   let data = await response.arrayBuffer();
   let fixedHeaders = new Headers(response.headers);
-  // Set "Content-Type" based on resource suffix;
-  // otherwise browser will complain.
-  let contentEncoding = 'text/html; charset=UTF-8';
-  if (url.endsWith('.js')) {
-    contentEncoding = 'application/javascript';
-  } else if (url.endsWith('.wasm')) {
-    contentEncoding = 'application/wasm';
+
+  if (isJxlWorkflow) {
+    fixedHeaders.set('Content-Type', 'image/jxl');
+  } else { // is Brotli workflow
+    // Set "Content-Type" based on resource suffix;
+    // otherwise browser will complain.
+    let contentEncoding = 'text/html; charset=UTF-8';
+    if (url.endsWith('.js')) {
+      contentEncoding = 'application/javascript';
+    } else if (url.endsWith('.wasm')) {
+      contentEncoding = 'application/wasm';
+    }
+    fixedHeaders.set('Content-Type', contentEncoding);
+    // Inform browser that data stream is compressed.
+    fixedHeaders.set('Content-Encoding', 'br');
   }
-  fixedHeaders.set('Content-Type', contentEncoding);
-  // Inform browser that data stream is compressed.
-  fixedHeaders.set('Content-Encoding', 'br');
   let t2 = Date.now();
   console.log('Timing: ' + (t1 - t0) + ' ' + (t2 - t1));
   return new Response(data, {headers: fixedHeaders});

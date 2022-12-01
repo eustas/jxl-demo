@@ -79,10 +79,6 @@
   };
 
   const wrapImageResponse = async (clientId, originalResponse) => {
-    console.log(
-        'Response status: ' + originalResponse.status +
-        ', url: ' + originalResponse.url);
-
     // TODO: cache?
     const client = await clients.get(clientId);
     // Client is gone? Not our problem then.

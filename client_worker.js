@@ -9,6 +9,11 @@ let decoder = null;
 let jobs = [];
 
 const processJobs = () => {
+  // Decoder not yet loaded.
+  if (!decoder) {
+    return;
+  }
+
   while (true) {
     let job = null;
     // Currently we do not do progressive; process only "inputComplete" jobs.

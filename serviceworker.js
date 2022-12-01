@@ -83,6 +83,10 @@
         'Response status: ' + originalResponse.status +
         ', url: ' + originalResponse.url);
 
+    for (const pair of originalResponse.headers.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+    
     const client = await clients.get(clientId);
     // Client is gone? Not our problem then.
     if (!client) {

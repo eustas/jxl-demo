@@ -41,6 +41,7 @@ export default async (request: Request, context: Context) => {
 
   // Request pre-compressed resource (with a suffix).
   let response = await context.rewrite(url + suffix);
+  context.log('Response status: ' + response.status);
   // First latency checkpoint (as we synchronously wait for resource fetch).
   let t1 = Date.now();
   // If pre-compressed resource does not exist - pass.

@@ -86,16 +86,18 @@
     for (const pair of originalResponse.headers.entries()) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
-    
+
+    // For unknown reason body gets used if we do that after acquiring client.
+    const inputStream = await originalResponse.body;
+    // Can't use "BYOB" for regular responses.
+    const reader = inputStream.getReader();
+
+    // TODO: cache?
     const client = await clients.get(clientId);
     // Client is gone? Not our problem then.
     if (!client) {
       return originalResponse;
     }
-
-    const inputStream = await originalResponse.body;
-    // Can't use "BYOB" for regular responses.
-    const reader = inputStream.getReader();
 
     const inflightEntry = {
       clientId: clientId,

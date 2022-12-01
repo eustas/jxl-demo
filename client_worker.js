@@ -44,8 +44,11 @@ const processJobs = () => {
       decoder.HEAP8.set(input[i], buffer + offset);
       offset += input[i].length;
     }
+    let t0 = Date.now();
     // TODO: check result
     const result = decoder._jxlDecompress(buffer, totalInputLength);
+    let t1 = Date.now();
+    console.log('Decoding time: ' + (t1 - t0) + 'ms');
     decoder._free(buffer);
     const outputLength = decoder.HEAP32[result >> 2];
     const outputAddr = decoder.HEAP32[(result + 4) >> 2];

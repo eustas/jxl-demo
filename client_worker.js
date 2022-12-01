@@ -48,7 +48,7 @@ const processJobs = () => {
     const result = decoder._jxlDecompress(buffer, totalInputLength);
     decoder._free(buffer);
     const outputLength = decoder.HEAP32[result >> 2];
-    const outputAddr = decoder.HEAP32[(output + 4) >> 2];
+    const outputAddr = decoder.HEAP32[(result + 4) >> 2];
     const output = new Uint8Array(outputLength);
     const outputSrc = new Uint8Array(decoder.HEAP8.buffer);
     output.set(outputSrc.slice(outputAddr, outputAddr + outputLength));

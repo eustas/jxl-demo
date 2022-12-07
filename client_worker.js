@@ -48,7 +48,7 @@ const processJobs = () => {
     // TODO: check result
     const result = decoder._jxlDecompress(buffer, totalInputLength);
     let t1 = Date.now();
-    console.log('Decoding time: ' + (t1 - t0) + 'ms');
+    console.log('Decoded ' + job.url + ' in ' + (t1 - t0) + 'ms');
     decoder._free(buffer);
     const outputLength = decoder.HEAP32[result >> 2];
     const outputAddr = decoder.HEAP32[(result + 4) >> 2];
@@ -73,7 +73,7 @@ onmessage = function(event) {
       }
     }
     if (!job) {
-      job = {uid: data.uid, input: [], inputComplete: false};
+      job = {uid: data.uid, input: [], inputComplete: false, url: data.url};
       jobs.push(job);
     }
     if (data.data) {

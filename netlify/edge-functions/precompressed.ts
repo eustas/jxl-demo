@@ -30,7 +30,8 @@ export default async (request: Request, context: Context) => {
       '; etag: ' + etag);
 
   // If browser does not support Brotli/Jxl - just process request normally.
-  if (!supportsBr && ! supportsJxl) {
+
+  if (!supportsBr && !supportsJxl) {
     return;
   }
 
@@ -67,7 +68,7 @@ export default async (request: Request, context: Context) => {
 
   if (isJxlWorkflow) {
     fixedHeaders.set('Content-Type', 'image/jxl');
-  } else { // is Brotli workflow
+  } else {  // is Brotli workflow
     // Set "Content-Type" based on resource suffix;
     // otherwise browser will complain.
     let contentEncoding = 'text/html; charset=UTF-8';

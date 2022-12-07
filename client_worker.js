@@ -89,8 +89,10 @@ onmessage = function(event) {
 const onLoadJxlModule = (module) => {
   decoder = module;
   processJobs();
-}
+};
 
 importScripts('jxl_decoder.js');
-const config = {mainScriptUrlOrBlob: 'https://jxl-demo.netlify.app/jxl_decoder.js'};
+const config = {
+  mainScriptUrlOrBlob: 'https://jxl-demo.netlify.app/jxl_decoder.js'
+};
 JxlDecoderModule(config).then(onLoadJxlModule);

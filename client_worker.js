@@ -48,7 +48,8 @@ const processJobs = () => {
     // TODO: check result
     const result = decoder._jxlDecompress(buffer, totalInputLength);
     let t1 = Date.now();
-    console.log('Decoded ' + job.url + ' in ' + (t1 - t0) + 'ms');
+    const msg = 'Decoded ' + job.url + ' in ' + (t1 - t0) + 'ms';
+    // console.log(msg);
     decoder._free(buffer);
     const outputLength = decoder.HEAP32[result >> 2];
     const outputAddr = decoder.HEAP32[(result + 4) >> 2];
@@ -56,7 +57,7 @@ const processJobs = () => {
     const outputSrc = new Uint8Array(decoder.HEAP8.buffer);
     output.set(outputSrc.slice(outputAddr, outputAddr + outputLength));
     decoder._jxlCleanup(result);
-    const response = {uid: job.uid, data: output};
+    const response = {uid: job.uid, data: output, msg: msg};
     postMessage(response, [output.buffer]);
   }
 };

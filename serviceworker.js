@@ -165,9 +165,6 @@
   const onMessage = (event) => {
     const data = event.data;
     const uid = data.uid;
-    if (data.msg && addMessage) {
-      addMessage(data.msg, 'blue');
-    }
     let inflightEntry = null;
     for (let i = 0; i < inflight.length; ++i) {
       if (inflight[i].uid === uid) {
@@ -200,8 +197,14 @@
   const prepareClient = () => {
     const clientWorker = new Worker('client_worker.js');
     clientWorker.onmessage = (event) => {
+      const data = event.data;
+      if (typeof addMessage !== 'undefined') {
+        if (data.msg) {
+          addMessage(data.msg, 'blue');
+        }
+      }
       navigator.serviceWorker.controller.postMessage(
-          event.data, gatherTransferrables(event.data.data));
+          data, gatherTransferrables(data.data));
     };
 
     // Forward ServiceWorker requests to "Client" worker.

@@ -42,7 +42,7 @@
   // Inflight object: {clientId, uid, timestamp, controller}
   const inflight = [];
 
-  const wasmModule = null;
+  let wasmModule = null;
 
   const aliveClientIds = [];
 

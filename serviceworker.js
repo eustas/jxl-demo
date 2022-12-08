@@ -82,7 +82,8 @@
       const clientId = aliveClientIds[i];
       clients.get(clientId).then((client) => {
         if (client) {
-          client.postMessage({op: 'wasmModule', wasm: wasmModule});
+          //client.postMessage({op: 'wasmModule', wasm: wasmModule});
+          client.postMessage({op: 'wasmModule'});
         }
       });
     }
@@ -178,7 +179,8 @@
       if (wasmModule) {
         clients.get(clientId).then((client) => {
           if (client) {
-            client.postMessage({op: 'wasmModule', wasm: wasmModule});
+            // client.postMessage({op: 'wasmModule', wasm: wasmModule});
+            client.postMessage({op: 'wasmModule'});
           }
         });
       }
@@ -258,6 +260,7 @@
 
     // Forward ServiceWorker requests to "Client" worker.
     navigator.serviceWorker.addEventListener('message', (event) => {
+      console.log('Forward ' + event.data.op);
       clientWorker.postMessage(
           event.data, gatherTransferrables(event.data.data));
     });

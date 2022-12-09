@@ -260,6 +260,8 @@
           data, gatherTransferrables(data.data));
     };
 
+    const sharedWorker = new SharedWorker('shared_worker.js');
+
     // Forward ServiceWorker requests to "Client" worker.
     navigator.serviceWorker.addEventListener('message', (event) => {
       console.log('Forward ' + event.data.op);

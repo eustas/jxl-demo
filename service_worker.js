@@ -182,9 +182,6 @@
   };
 
   const serviceWorkerMain = () => {
-    // Periodically cleanup clients list.
-    setInterval(probeClients, 2500);
-
     // ServiceWorker lifecycle.
     self.addEventListener('install', () => {
       return self.skipWaiting();

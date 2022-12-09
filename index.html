@@ -298,7 +298,7 @@ let onJxlModuleReady = () => {
     wantSdr = true;
   }
 
-  addMessage('Color-space: "'+ colorSpace +'", tone-map to SDR: ' + wantSdr + ', displayNits: ' + (displayNits || 'n/a'), 'black');
+  addMessage('Color-space: "' + colorSpace + '", tone-map to SDR: ' + wantSdr + ', displayNits: ' + (displayNits || 'n/a'), 'black');
 
   let img = makeImg();
   img.name = imgName;
@@ -319,10 +319,8 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
 <img src="x.jpg?tmp=a" style="width:100%"/>
 <img src="x.jpg?tmp=b" style="width:100%"/>
-<img src="x.jpg?tmp=c" style="width:100%"/>
 <img src="w.jpg?tmp=1" style="width:100%"/>
 <img src="w.jpg?tmp=2" style="width:100%"/>
-<img src="w.jpg?tmp=3" style="width:100%"/>
 
 <!--script type="text/javascript" src="jxl_decoder.js"></script-->
 </body>

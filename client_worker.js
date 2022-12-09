@@ -3,8 +3,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-let wasmModule = null;
-let wasmModuleRecipients = [];
 let decoder = null;
 
 // Serialize work; plus postpone processing until decoder is ready.
@@ -64,19 +62,10 @@ const processJobs = () => {
   }
 };
 
-const onWasmModuleReceived = (module) => {
-  wasmModule = module;
-  while (wasmModuleRecipients.length) {
-    wasmModuleRecipients.shift()(module);
-  }
-};
-
 onmessage = function(event) {
   const data = event.data;
   console.log('CW received: ' + data.op);
-  if (data.op === 'wasmModule') {
-    onWasmModuleReceived(data.wasm);
-  } else if (data.op === 'decodeJxl') {
+  if (data.op === 'decodeJxl') {
     let job = null;
     for (let i = 0; i < jobs.length; ++i) {
       if (jobs[i].uid === data.uid) {
@@ -105,18 +94,5 @@ const onLoadJxlModule = (instance) => {
 importScripts('jxl_decoder.js');
 const config = {
   mainScriptUrlOrBlob: 'https://jxl-demo.netlify.app/jxl_decoder.js',
-  instantiateWasm: (imports, successCallback) => {
-    const makeInstance = (module) => {
-      WebAssembly.instantiate(module, imports).then((instance) => {
-        successCallback(instance.exports);
-      });
-    };
-    if (wasmModule) {
-      makeInstance(wasmModule);
-    } else {
-      wasmModuleRecipients.push(makeInstance);
-    }
-    return {};
-  }
 };
 JxlDecoderModule(config).then(onLoadJxlModule);

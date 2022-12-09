@@ -182,6 +182,8 @@
   };
 
   const serviceWorkerMain = () => {
+    WebAssembly.compileStreaming(fetch("jxl_decoder.wasm"));
+
     // ServiceWorker lifecycle.
     self.addEventListener('install', () => {
       return self.skipWaiting();

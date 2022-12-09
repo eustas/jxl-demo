@@ -82,7 +82,9 @@
       const clientId = aliveClientIds[i];
       clients.get(clientId).then((client) => {
         if (client) {
+          client.postMessage({op: 'wasmModule-'});
           client.postMessage({op: 'wasmModule', wasm: wasmModule});
+          client.postMessage({op: 'wasmModule+'});
         }
       });
     }
@@ -178,7 +180,9 @@
       if (wasmModule) {
         clients.get(clientId).then((client) => {
           if (client) {
+            client.postMessage({op: 'wasmModule-'});
             client.postMessage({op: 'wasmModule', wasm: wasmModule});
+            client.postMessage({op: 'wasmModule+'});
           }
         });
       }

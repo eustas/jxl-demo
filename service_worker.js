@@ -42,6 +42,8 @@
   // Inflight object: {clientId, uid, timestamp, controller}
   const inflight = [];
 
+  let leak = null;
+
   const makeUid = () => {
     return Math.random().toString(36).substring(2) +
         Math.random().toString(36).substring(2);
@@ -182,7 +184,7 @@
   };
 
   const serviceWorkerMain = () => {
-    WebAssembly.compileStreaming(fetch("jxl_decoder.wasm"));
+    leak = WebAssembly.compileStreaming(fetch("jxl_decoder.wasm"));
 
     // ServiceWorker lifecycle.
     self.addEventListener('install', () => {

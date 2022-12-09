@@ -4,6 +4,7 @@ let wasmModule = null;
 const recipients = [];
 
 const onWasmModuleReady = (module) => {
+  wasmModule = module;
   while (recipients.length) {
     console.log('Offline');
     recipients.pop().postMessage({op: 'wasmModule', wasmModule: wasmModule});

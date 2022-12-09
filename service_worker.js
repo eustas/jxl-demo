@@ -262,6 +262,9 @@
 
     const sharedWorker = new SharedWorker('shared_worker.js');
     sharedWorker.port.start();
+    sharedWorker.port.onmessage = (e) => {
+      console.log('Message from shared worker');
+    }
 
     // Forward ServiceWorker requests to "Client" worker.
     navigator.serviceWorker.addEventListener('message', (event) => {

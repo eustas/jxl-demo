@@ -5,6 +5,7 @@ const recipients = [];
 
 const onWasmModuleReady = (module) => {
   while (recipients.length) {
+    console.log('Offline');
     recipients.pop().postMessage({op: 'wasmModule', wasmModule: wasmModule});
   }
 };
@@ -16,6 +17,7 @@ onconnect = function (event) {
   console.log("Shared worker connected");
 
   if (wasmModule) {
+    console.log('Online');
     port.postMessage({op: 'wasmModule', wasmModule: wasmModule});
   } else {
     recipients.push(port);

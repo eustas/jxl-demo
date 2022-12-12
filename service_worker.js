@@ -184,6 +184,10 @@
   };
 
   const serviceWorkerMain = () => {
+    // https://v8.dev/blog/wasm-code-caching
+    // > Every web site must perform at least one full compilation of a
+    // > WebAssembly module — use workers to hide that from your users.
+    // TODO(eustas): not 100% reliable, investigate why
     leak = WebAssembly.compileStreaming(fetch("jxl_decoder.wasm"));
 
     // ServiceWorker lifecycle.

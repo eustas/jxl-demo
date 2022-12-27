@@ -34,6 +34,7 @@
     'jxl_decoder.worker.js': '"use strict";var Module={},ENVIRONMENT_IS_NODE="object"==typeof process&&"object"==typeof process.versions&&"string"==typeof process.versions.node,nodeWorkerThreads,parentPort,fs,initializedJS=(ENVIRONMENT_IS_NODE&&(nodeWorkerThreads=require("worker_threads"),parentPort=nodeWorkerThreads.parentPort,parentPort.on("message",e=>onmessage({data:e})),fs=require("fs"),Object.assign(global,{self:global,require:require,Module:Module,location:{href:__filename},Worker:nodeWorkerThreads.Worker,importScripts:function(e){(0,eval)(fs.readFileSync(e,"utf8"))},postMessage:function(e){parentPort.postMessage(e)},performance:global.performance||{now:function(){return Date.now()}}})),!1),pendingNotifiedProxyingQueues=[];function threadPrintErr(){var e=Array.prototype.slice.call(arguments).join(" ");ENVIRONMENT_IS_NODE?fs.writeSync(2,e+"\\n"):console.error(e)}function threadAlert(){var e=Array.prototype.slice.call(arguments).join(" ");postMessage({cmd:"alert",text:e,threadId:Module._pthread_self()})}var err=threadPrintErr;self.alert=threadAlert,Module.instantiateWasm=(e,r)=>{e=new WebAssembly.Instance(Module.wasmModule,e);return r(e),Module.wasmModule=null,e.exports},self.onunhandledrejection=e=>{throw e.reason??e},self.onmessage=e=>{try{var r;if("load"===e.data.cmd)Module.wasmModule=e.data.wasmModule,Module.wasmMemory=e.data.wasmMemory,Module.buffer=Module.wasmMemory.buffer,Module.ENVIRONMENT_IS_PTHREAD=!0,"string"==typeof e.data.urlOrBlob?importScripts(e.data.urlOrBlob):(r=URL.createObjectURL(e.data.urlOrBlob),importScripts(r),URL.revokeObjectURL(r)),JxlDecoderModule(Module).then(function(e){Module=e});else if("run"===e.data.cmd){Module.__performance_now_clock_drift=performance.now()-e.data.time,Module.__emscripten_thread_init(e.data.pthread_ptr,0,0,1),Module.establishStackSpace(),Module.PThread.receiveObjectTransfer(e.data),Module.PThread.threadInitTLS(),initializedJS||(pendingNotifiedProxyingQueues.forEach(e=>{Module.executeNotifiedProxyingQueue(e)}),pendingNotifiedProxyingQueues=[],initializedJS=!0);try{Module.invokeEntryPoint(e.data.start_routine,e.data.arg)}catch(e){if("unwind"!=e){if(!(e instanceof Module.ExitStatus))throw e;Module.keepRuntimeAlive()||Module.__emscripten_thread_exit(e.status)}}}else"cancel"===e.data.cmd?Module._pthread_self()&&Module.__emscripten_thread_exit(-1):"setimmediate"!==e.data.target&&("processProxyingQueue"===e.data.cmd?initializedJS?Module.executeNotifiedProxyingQueue(e.data.queue):pendingNotifiedProxyingQueues.push(e.data.queue):e.data.cmd&&(err("worker.js received unknown command "+e.data.cmd),err(e.data)))}catch(e){throw Module.__emscripten_thread_crashed&&Module.__emscripten_thread_crashed(),e}};',
   };
 
+  // Enable SharedArrayBuffer.
   const setCopHeaders = (headers) => {
     headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
     headers.set('Cross-Origin-Opener-Policy', 'same-origin');
@@ -42,24 +43,24 @@
   // Inflight object: {clientId, uid, timestamp, controller}
   const inflight = [];
 
-  /* Intentional leak (unused). */
-  let leak = null;
-
+  // Generate (very likely) unique string.
   const makeUid = () => {
     return Math.random().toString(36).substring(2) +
         Math.random().toString(36).substring(2);
   };
 
+  // Make list (non-recursively) of transferable entities.
   const gatherTransferrables = (...args) => {
     const result = [];
     for (let i = 0; i < args.length; ++i) {
-      if (args[i]) {
+      if (args[i] && args[i].buffer) {
         result.push(args[i].buffer);
       }
     }
     return result;
   };
 
+  // Serve items that are embedded in this service worker.
   const maybeProcessEmbeddedResources = (event) => {
     const url = event.request.url;
     // Shortcut for baked-in scripts.
@@ -80,6 +81,7 @@
     return false;
   };
 
+  // Decode JXL image response and serve it as a PNG image.
   const wrapImageResponse = async (clientId, originalResponse) => {
     // TODO: cache?
     const client = await clients.get(clientId);
@@ -122,10 +124,13 @@
     reader.read(new SharedArrayBuffer(65536)).then(onRead);
 
     let modifiedResponseHeaders = new Headers(originalResponse.headers);
+    modifiedResponseHeaders.delete('Content-Length');
     modifiedResponseHeaders.set('Content-Type', 'image/png');
+    modifiedResponseHeaders.set('Server', 'ServiceWorker');
     return new Response(outputStream, {headers: modifiedResponseHeaders});
   };
 
+  // Check if response needs decoding; if so - do it.
   const wrapImageRequest = async (clientId, request) => {
     let modifiedRequestHeaders = new Headers(request.headers);
     modifiedRequestHeaders.append('Accept', 'image/jxl');
@@ -141,6 +146,7 @@
     return originalResponse;
   };
 
+  // Process fetch request; either bypass, or serve embedded resource, or upgrade.
   const onFetch = async (event) => {
     const clientId = event.clientId;
     const request = event.request;
@@ -166,6 +172,7 @@
     }
   };
 
+  // Serve decoded bytes.
   const onMessage = (event) => {
     const data = event.data;
     const uid = data.uid;
@@ -184,6 +191,7 @@
     inflightEntry.outputStreamController.close();
   };
 
+  // This method is "main" for service worker.
   const serviceWorkerMain = () => {
     // https://v8.dev/blog/wasm-code-caching
     // > Every web site must perform at least one full compilation of a
@@ -251,10 +259,15 @@
             onServiceWorkerRegistrationFailure);
   };
 
+  const pageMain = () => {
+    maybeRegisterServiceWorker();
+    prepareClient();
+  };
+
+  // Detect environment and run corresponding "main" method.
   if (typeof window === 'undefined') {
     serviceWorkerMain();
   } else {
-    maybeRegisterServiceWorker();
-    prepareClient();
+    pageMain();
   }
 })();

@@ -42,6 +42,7 @@
   // Inflight object: {clientId, uid, timestamp, controller}
   const inflight = [];
 
+  /* Intentional leak (unused). */
   let leak = null;
 
   const makeUid = () => {
@@ -188,7 +189,7 @@
     // > Every web site must perform at least one full compilation of a
     // > WebAssembly module — use workers to hide that from your users.
     // TODO(eustas): not 100% reliable, investigate why
-    leak = WebAssembly.compileStreaming(fetch('jxl_decoder.wasm'));
+    self['JxlDecoderLeak'] = WebAssembly.compileStreaming(fetch('jxl_decoder.wasm'));
 
     // ServiceWorker lifecycle.
     self.addEventListener('install', () => {

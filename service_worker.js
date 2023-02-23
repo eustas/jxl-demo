@@ -127,7 +127,9 @@
         reader.read().then(onRead);
       }
     };
-    reader.read(new SharedArrayBuffer(65536)).then(onRead);
+    // const view = new SharedArrayBuffer(65536);
+    const view = new Uint8Array(65536);
+    reader.read(view).then(onRead);
 
     let modifiedResponseHeaders = new Headers(originalResponse.headers);
     modifiedResponseHeaders.delete('Content-Length');

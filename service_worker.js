@@ -27,7 +27,12 @@
  */
 
 (() => {
+  // Set COOP/COEP headers for document/script responses; use when this can not
+  // be done on server side (e.g. GitHub Pages).
   const FORCE_COP = true;
+  // Interpret 'content-type: application/octet-stream' as JXL; use when server
+  // does not set appropriate content type (e.g. GitHub Pages).
+  const FORCE_DECODING = true;
   // Embedded (baked-in) responses for faster turn-around.
   const EMBEDDED = {
     'client_worker.js': 'let decoder=null,jobs=[];const processJobs=()=>{if(decoder)for(;;){let o=null;for(let e=0;e<jobs.length;++e)if(jobs[e].inputComplete){o=jobs[e],jobs[e]=jobs[jobs.length-1],jobs.pop();break}if(!o)return;console.log("CW job: "+o.uid);var r=o.input;let l=0;for(let e=0;e<r.length;e++)l+=r[e].length;var t=decoder._malloc(l);let d=0;for(let e=0;e<r.length;++e)decoder.HEAP8.set(r[e],t+d),d+=r[e].length;var e=Date.now(),s=decoder._jxlDecompress(t,l),n=Date.now(),n="Decoded "+o.url+" in "+(n-e)+"ms",e=(decoder._free(t),decoder.HEAP32[s>>2]),c=decoder.HEAP32[s+4>>2];const i=new Uint8Array(e),u=new Uint8Array(decoder.HEAP8.buffer);i.set(u.slice(c,c+e)),decoder._jxlCleanup(s);c={uid:o.uid,data:i,msg:n};postMessage(c,[i.buffer])}},onLoadJxlModule=(onmessage=function(e){var l=e.data;if(console.log("CW received: "+l.op),"decodeJxl"===l.op){let o=null;for(let e=0;e<jobs.length;++e)if(jobs[e].uid===l.uid){o=jobs[e];break}o||(o={uid:l.uid,input:[],inputComplete:!1,url:l.url},jobs.push(o)),l.data?o.input.push(l.data):o.inputComplete=!0,processJobs()}},e=>{decoder=e,processJobs()}),config=(importScripts("jxl_decoder.js"),{mainScriptUrlOrBlob:"https://jxl-demo.netlify.app/jxl_decoder.js",INITIAL_MEMORY:16777216});JxlDecoderModule(config).then(onLoadJxlModule);',
@@ -140,7 +145,11 @@
     let originalResponse = await fetch(modifiedRequest);
     let contentType = originalResponse.headers.get('Content-Type');
 
-    if (contentType === 'image/jxl') {
+    let isJxlResponse = (contentType === 'image/jxl');
+    if (FORCE_DECODING && contentType === 'application/octet-stream') {
+      isJxlResponse = true;
+    }
+    if (isJxlResponse) {
       return wrapImageResponse(clientId, originalResponse);
     }
 
